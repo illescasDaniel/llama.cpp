@@ -1,0 +1,11 @@
+//
+//  build.xcconfig
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// PLEASE RENAME this file to "build.xcconfig" or duplicate this file and then rename it,
+// then change this information
+
+PRODUCT_BUNDLE_IDENTIFIER=com.something.MyApp
+DEVELOPMENT_TEAM=1234

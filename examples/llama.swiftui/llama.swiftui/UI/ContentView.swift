@@ -13,7 +13,11 @@ struct ContentView: View {
 					.frame(maxWidth: .infinity, alignment: .leading)
 					.padding()
 					.onTapGesture {
+						#if os(iOS)
 						UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+						#else
+						NSApplication.shared.sendAction(#selector(NSResponder.resignFirstResponder), to: nil, from: nil)
+						#endif
 					}
 			}
 			
@@ -36,7 +40,11 @@ struct ContentView: View {
 				}
 				
 				Button("Copy") {
+					#if os(iOS)
 					UIPasteboard.general.string = llamaState.messageLog
+					#else
+					NSPasteboard.general.setString(llamaState.messageLog, forType: .string)
+					#endif
 				}
 			}.buttonStyle(.bordered)
 			
