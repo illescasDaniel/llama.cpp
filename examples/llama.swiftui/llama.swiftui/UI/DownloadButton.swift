@@ -57,7 +57,7 @@ struct DownloadButton: View {
 				print("Error: \(err.localizedDescription)")
 			}
 		}
-		
+
 		observation = downloadTask?.progress.observe(\.fractionCompleted) { progress, _ in
 			self.progress = progress.fractionCompleted
 		}
