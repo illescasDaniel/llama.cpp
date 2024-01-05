@@ -1,6 +1,5 @@
 import Foundation
 import llama
-import OSLog
 
 enum LlamaError: Error {
 	case couldNotLoadModel(path: String)
@@ -12,25 +11,8 @@ enum LlamaError: Error {
 	case llamaDecodeFailedDuringTextGeneration
 }
 
-fileprivate func llama_batch_clear(_ batch: inout llama_batch) {
-	batch.n_tokens = 0
-}
-
-fileprivate func llama_batch_add(_ batch: inout llama_batch, _ id: llama_token, _ pos: llama_pos, _ seq_ids: [llama_seq_id], _ logits: Bool) {
-	batch.token   [Int(batch.n_tokens)] = id
-	batch.pos     [Int(batch.n_tokens)] = pos
-	batch.n_seq_id[Int(batch.n_tokens)] = Int32(seq_ids.count)
-	for i in 0..<seq_ids.count {
-		batch.seq_id[Int(batch.n_tokens)]![Int(i)] = seq_ids[i]
-	}
-	batch.logits  [Int(batch.n_tokens)] = logits ? 1 : 0
-
-	batch.n_tokens += 1
-}
-
 actor LlamaContext {
 
-	private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "LlamaContext", category: "LlamaContext")
 	private let model: OpaquePointer
 	private let context: OpaquePointer
 	private var batch: llama_batch
@@ -44,7 +26,36 @@ actor LlamaContext {
 
 	var n_decode: Int32 = 0
 
-	init(model: OpaquePointer, context: OpaquePointer) {
+	init(url: URL) throws {
+		let path = url.path(percentEncoded: false)
+		llama_backend_init(false)
+		var model_params = llama_model_default_params()
+
+#if targetEnvironment(simulator)
+		model_params.n_gpu_layers = 0
+#endif
+		let model = llama_load_model_from_file(path, model_params)
+		guard let model else {
+			throw LlamaError.couldNotLoadModel(path: path)
+		}
+
+		let n_threads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
+
+		var ctx_params = llama_context_default_params()
+		ctx_params.seed  = 1234
+		ctx_params.n_ctx = 2048
+		ctx_params.n_threads       = UInt32(n_threads)
+		ctx_params.n_threads_batch = UInt32(n_threads)
+
+		let context = llama_new_context_with_model(model, ctx_params)
+		guard let context else {
+			throw LlamaError.couldNotInitializeContext
+		}
+
+		self.init(model: model, context: context)
+	}
+
+	private init(model: OpaquePointer, context: OpaquePointer) {
 		self.model = model
 		self.context = context
 		self.tokens_list = []
@@ -59,63 +70,25 @@ actor LlamaContext {
 		llama_backend_free()
 	}
 
-	static func create_context(path: String) throws -> LlamaContext {
-		llama_backend_init(false)
-		var model_params = llama_model_default_params()
-
-#if targetEnvironment(simulator)
-		model_params.n_gpu_layers = 0
-		print("Running on simulator, force use n_gpu_layers = 0")
-#endif
-		let model = llama_load_model_from_file(path, model_params)
-		guard let model else {
-			print("Could not load model at \(path)")
-			throw LlamaError.couldNotLoadModel(path: path)
-		}
-
-		let n_threads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
-		print("Using \(n_threads) threads")
-
-		var ctx_params = llama_context_default_params()
-		ctx_params.seed  = 1234
-		ctx_params.n_ctx = 2048
-		ctx_params.n_threads       = UInt32(n_threads)
-		ctx_params.n_threads_batch = UInt32(n_threads)
-
-		let context = llama_new_context_with_model(model, ctx_params)
-		guard let context else {
-			throw LlamaError.couldNotInitializeContext
-		}
-
-		return LlamaContext(model: model, context: context)
-	}
-
 	func model_info() -> String {
-		let result = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
-		result.initialize(repeating: Int8(0), count: 256)
-		defer {
-			result.deallocate()
+		let capacity = 256
+		let buffer = Array<CChar>(unsafeUninitializedCapacity: capacity) { buffer, initializedCount in
+			initializedCount = Int(llama_model_desc(model, buffer.baseAddress, capacity)) + 1
+			buffer[initializedCount] = CChar(0)
 		}
-
-		// TODO: this is probably very stupid way to get the string from C
-
-		let nChars = llama_model_desc(model, result, 256)
-		let bufferPointer = UnsafeBufferPointer(start: result, count: Int(nChars))
-
-		var SwiftString = ""
-		for char in bufferPointer {
-			SwiftString.append(Character(UnicodeScalar(UInt8(char))))
-		}
-
-		return SwiftString
+		let description = String(cString: buffer)
+		return description
 	}
 
 	func get_n_tokens() -> Int32 {
-		return batch.n_tokens;
+		return batch.n_tokens
 	}
 
 	func completion_init(text: String) throws {
-		logger.trace("attempting to complete \"\(text, privacy: .private)\"")
+
+		#if DEBUG
+		print("attempting to complete \"\(text)\"")
+		#endif
 
 		tokens_list = tokenize(text: text, add_bos: true)
 		temporary_invalid_cchars = []
@@ -123,16 +96,15 @@ actor LlamaContext {
 		let n_ctx = llama_n_ctx(context)
 		let n_kv_req = tokens_list.count + (Int(n_len) - tokens_list.count)
 
-		logger.trace("n_len = \(self.n_len), n_ctx = \(n_ctx), n_kv_req = \(n_kv_req)")
-
 		if n_kv_req > n_ctx {
 			throw LlamaError.requiredCacheSizeIsNotBigEnough
 		}
 
+#if DEBUG
 		for id in tokens_list {
-			let str = String(cString: token_to_piece(token: id) + [0])
-			logger.trace("\(str, privacy: .private)")
+			print(String(cString: token_to_piece(token: id) + [0]))
 		}
+#endif
 
 		llama_batch_clear(&batch)
 
@@ -187,7 +159,6 @@ actor LlamaContext {
 		} else {
 			new_token_str = ""
 		}
-		logger.trace("\(new_token_str, privacy: .private)")
 		// tokens_list.append(new_token_id)
 
 		llama_batch_clear(&batch)
@@ -266,7 +237,9 @@ actor LlamaContext {
 			pp_std += speed_pp * speed_pp
 			tg_std += speed_tg * speed_tg
 
-			logger.trace("pp \(speed_pp) t/s, tg \(speed_tg) t/s")
+			#if DEBUG
+			print("pp \(speed_pp) t/s, tg \(speed_tg) t/s")
+			#endif
 		}
 
 		pp_avg /= Double(nr)
@@ -280,14 +253,14 @@ actor LlamaContext {
 			tg_std = 0
 		}
 
-		let model_desc     = model_info();
-		let model_size     = String(format: "%.2f GiB", Double(llama_model_size(model)) / 1024.0 / 1024.0 / 1024.0);
-		let model_n_params = String(format: "%.2f B", Double(llama_model_n_params(model)) / 1e9);
-		let backend        = "Metal";
-		let pp_avg_str     = String(format: "%.2f", pp_avg);
-		let tg_avg_str     = String(format: "%.2f", tg_avg);
-		let pp_std_str     = String(format: "%.2f", pp_std);
-		let tg_std_str     = String(format: "%.2f", tg_std);
+		let model_desc     = model_info()
+		let model_size     = String(format: "%.2f GiB", Double(llama_model_size(model)) / 1024.0 / 1024.0 / 1024.0)
+		let model_n_params = String(format: "%.2f B", Double(llama_model_n_params(model)) / 1e9)
+		let backend        = "Metal"
+		let pp_avg_str     = String(format: "%.2f", pp_avg)
+		let tg_avg_str     = String(format: "%.2f", tg_avg)
+		let pp_std_str     = String(format: "%.2f", pp_std)
+		let tg_std_str     = String(format: "%.2f", tg_std)
 
 		var result = ""
 
@@ -345,5 +318,21 @@ actor LlamaContext {
 			let bufferPointer = UnsafeBufferPointer(start: result, count: Int(nTokens))
 			return Array(bufferPointer)
 		}
+	}
+
+	private func llama_batch_clear(_ batch: inout llama_batch) {
+		batch.n_tokens = 0
+	}
+
+	private func llama_batch_add(_ batch: inout llama_batch, _ id: llama_token, _ pos: llama_pos, _ seq_ids: [llama_seq_id], _ logits: Bool) {
+		batch.token   [Int(batch.n_tokens)] = id
+		batch.pos     [Int(batch.n_tokens)] = pos
+		batch.n_seq_id[Int(batch.n_tokens)] = Int32(seq_ids.count)
+		for i in 0..<seq_ids.count {
+			batch.seq_id[Int(batch.n_tokens)]![Int(i)] = seq_ids[i]
+		}
+		batch.logits  [Int(batch.n_tokens)] = logits ? 1 : 0
+
+		batch.n_tokens += 1
 	}
 }
