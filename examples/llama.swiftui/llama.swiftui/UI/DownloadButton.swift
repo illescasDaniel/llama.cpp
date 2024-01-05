@@ -102,13 +102,13 @@ struct DownloadButton: View {
         .onDisappear() {
             downloadTask?.cancel()
         }
-        .onChange(of: llamaState.cacheCleared) { newValue in
-            if newValue {
-                downloadTask?.cancel()
-                let fileURL = DownloadButton.getFileURL(filename: filename)
-                status = FileManager.default.fileExists(atPath: fileURL.path) ? "downloaded" : "download"
-            }
-        }
+		.onChange(of: llamaState.cacheCleared, { _, cacheCleared in
+			if cacheCleared {
+				downloadTask?.cancel()
+				let fileURL = DownloadButton.getFileURL(filename: filename)
+				status = FileManager.default.fileExists(atPath: fileURL.path) ? "downloaded" : "download"
+			}
+		})
     }
 }
 
