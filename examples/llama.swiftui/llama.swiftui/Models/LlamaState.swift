@@ -23,7 +23,7 @@ class LlamaState: ObservableObject {
     func loadModel(modelUrl: URL?) throws {
         if let modelUrl {
             messageLog += "Loading model...\n"
-            llamaContext = try LlamaContext.create_context(path: modelUrl.path())
+            llamaContext = try LlamaContext.create_context(path: modelUrl.path(percentEncoded: false))
             messageLog += "Loaded model \(modelUrl.lastPathComponent)\n"
         } else {
             messageLog += "Load a model from the list below\n"
