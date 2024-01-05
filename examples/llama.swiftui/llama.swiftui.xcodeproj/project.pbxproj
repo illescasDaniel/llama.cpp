@@ -462,7 +462,7 @@
 			repositoryURL = "https://github.com/illescasDaniel/llama.cpp";
 			requirement = {
 				kind = revision;
-				revision = 5ef13d09a9f9c58e9ef422407ef24050d82adb6b;
+				revision = 8eb2f271804f96fe85ff190b90076147dbf8118d;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

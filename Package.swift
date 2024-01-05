@@ -14,7 +14,7 @@ let package = Package(
         .library(name: "llama", targets: ["llama"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/ggerganov/ggml.git", .branch("master"))
+        .package(url: "https://github.com/ggerganov/ggml.git", .revision("94394bee47699fe3a6eed79a438c9fc5e0254e54"))
     ],
     targets: [
         .target(
