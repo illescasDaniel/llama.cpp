@@ -1,8 +1,0 @@
-//
-//  build.xcconfig
-
-// Configuration settings file format documentation can be found at:
-// https://help.apple.com/xcode/#/dev745c5c974
-
-PRODUCT_BUNDLE_IDENTIFIER=com.illescas-daniel-llama-swift
-DEVELOPMENT_TEAM=PRK6268SLD
