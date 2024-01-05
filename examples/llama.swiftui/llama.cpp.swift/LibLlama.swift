@@ -1,8 +1,15 @@
 import Foundation
 import llama
+import OSLog
 
 enum LlamaError: Error {
+	case couldNotLoadModel(path: String)
 	case couldNotInitializeContext
+	case requiredCacheSizeIsNotBigEnough
+	case llamaDecodeFailed
+	case failedToEvaluateLlama
+	case llamaDecodeFailedDuringPrompt
+	case llamaDecodeFailedDuringTextGeneration
 }
 
 fileprivate func llama_batch_clear(_ batch: inout llama_batch) {
@@ -22,8 +29,10 @@ fileprivate func llama_batch_add(_ batch: inout llama_batch, _ id: llama_token, 
 }
 
 actor LlamaContext {
-	private var model: OpaquePointer
-	private var context: OpaquePointer
+
+	private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "LlamaContext", category: "LlamaContext")
+	private let model: OpaquePointer
+	private let context: OpaquePointer
 	private var batch: llama_batch
 	private var tokens_list: [llama_token]
 
@@ -61,7 +70,7 @@ actor LlamaContext {
 		let model = llama_load_model_from_file(path, model_params)
 		guard let model else {
 			print("Could not load model at \(path)")
-			throw LlamaError.couldNotInitializeContext
+			throw LlamaError.couldNotLoadModel(path: path)
 		}
 
 		let n_threads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
@@ -75,7 +84,6 @@ actor LlamaContext {
 
 		let context = llama_new_context_with_model(model, ctx_params)
 		guard let context else {
-			print("Could not load context!")
 			throw LlamaError.couldNotInitializeContext
 		}
 
@@ -106,8 +114,8 @@ actor LlamaContext {
 		return batch.n_tokens;
 	}
 
-	func completion_init(text: String) {
-		print("attempting to complete \"\(text)\"")
+	func completion_init(text: String) throws {
+		logger.trace("attempting to complete \"\(text, privacy: .private)\"")
 
 		tokens_list = tokenize(text: text, add_bos: true)
 		temporary_invalid_cchars = []
@@ -115,14 +123,15 @@ actor LlamaContext {
 		let n_ctx = llama_n_ctx(context)
 		let n_kv_req = tokens_list.count + (Int(n_len) - tokens_list.count)
 
-		print("\n n_len = \(n_len), n_ctx = \(n_ctx), n_kv_req = \(n_kv_req)")
+		logger.trace("n_len = \(self.n_len), n_ctx = \(n_ctx), n_kv_req = \(n_kv_req)")
 
 		if n_kv_req > n_ctx {
-			print("error: n_kv_req > n_ctx, the required KV cache size is not big enough")
+			throw LlamaError.requiredCacheSizeIsNotBigEnough
 		}
 
 		for id in tokens_list {
-			print(String(cString: token_to_piece(token: id) + [0]))
+			let str = String(cString: token_to_piece(token: id) + [0])
+			logger.trace("\(str, privacy: .private)")
 		}
 
 		llama_batch_clear(&batch)
@@ -134,13 +143,13 @@ actor LlamaContext {
 		batch.logits[Int(batch.n_tokens) - 1] = 1 // true
 
 		if llama_decode(context, batch) != 0 {
-			print("llama_decode() failed")
+			throw LlamaError.llamaDecodeFailed
 		}
 
 		n_cur = batch.n_tokens
 	}
 
-	func completion_loop() -> String {
+	func completion_loop() throws -> String {
 		var new_token_id: llama_token = 0
 
 		let n_vocab = llama_n_vocab(model)
@@ -159,7 +168,6 @@ actor LlamaContext {
 		}
 
 		if new_token_id == llama_token_eos(context) || n_cur == n_len {
-			print("\n")
 			let new_token_str = String(cString: temporary_invalid_cchars + [0])
 			temporary_invalid_cchars.removeAll()
 			return new_token_str
@@ -179,7 +187,7 @@ actor LlamaContext {
 		} else {
 			new_token_str = ""
 		}
-		print(new_token_str)
+		logger.trace("\(new_token_str, privacy: .private)")
 		// tokens_list.append(new_token_id)
 
 		llama_batch_clear(&batch)
@@ -189,13 +197,13 @@ actor LlamaContext {
 		n_cur    += 1
 
 		if llama_decode(context, batch) != 0 {
-			print("failed to evaluate llama!")
+			throw LlamaError.failedToEvaluateLlama
 		}
 
 		return new_token_str
 	}
 
-	func bench(pp: Int, tg: Int, pl: Int, nr: Int = 1) -> String {
+	func bench(pp: Int, tg: Int, pl: Int, nr: Int = 1) throws -> String {
 		var pp_avg: Double = 0
 		var tg_avg: Double = 0
 
@@ -219,7 +227,7 @@ actor LlamaContext {
 			let t_pp_start = ggml_time_us()
 
 			if llama_decode(context, batch) != 0 {
-				print("llama_decode() failed during prompt")
+				throw LlamaError.llamaDecodeFailedDuringPrompt
 			}
 
 			let t_pp_end = ggml_time_us()
@@ -238,7 +246,7 @@ actor LlamaContext {
 				}
 
 				if llama_decode(context, batch) != 0 {
-					print("llama_decode() failed during text generation")
+					throw LlamaError.llamaDecodeFailedDuringTextGeneration
 				}
 			}
 
@@ -258,7 +266,7 @@ actor LlamaContext {
 			pp_std += speed_pp * speed_pp
 			tg_std += speed_tg * speed_tg
 
-			print("pp \(speed_pp) t/s, tg \(speed_tg) t/s")
+			logger.trace("pp \(speed_pp) t/s, tg \(speed_tg) t/s")
 		}
 
 		pp_avg /= Double(nr)
@@ -296,6 +304,8 @@ actor LlamaContext {
 		temporary_invalid_cchars.removeAll()
 		llama_kv_cache_clear(context)
 	}
+
+	// MARK: - Private
 
 	private func tokenize(text: String, add_bos: Bool) -> [llama_token] {
 		let utf8Count = text.utf8.count

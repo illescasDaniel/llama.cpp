@@ -5,22 +5,6 @@ struct ContentView: View {
 	@State var llamaState = LlamaState()
 	@State private var multiLineText = ""
 	
-	private static func cleanupModelCaches() {
-		// Delete all models (*.gguf)
-		let fileManager = FileManager.default
-		let documentsUrl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-		do {
-			let fileURLs = try fileManager.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
-			for fileURL in fileURLs {
-				if fileURL.pathExtension == "gguf" {
-					try fileManager.removeItem(at: fileURL)
-				}
-			}
-		} catch {
-			print("Error while enumerating files \(documentsUrl.path): \(error.localizedDescription)")
-		}
-	}
-	
 	var body: some View {
 		VStack {
 			ScrollView(.vertical, showsIndicators: true) {
@@ -100,7 +84,7 @@ struct ContentView: View {
 				)
 				
 				Button("Clear downloaded models") {
-					ContentView.cleanupModelCaches()
+					cleanupModelCaches()
 					llamaState.cacheCleared = true
 				}
 				
@@ -113,22 +97,48 @@ struct ContentView: View {
 		.padding()
 	}
 	
-	func sendText() {
+	private func sendText() {
 		Task {
-			await llamaState.complete(text: multiLineText)
-			multiLineText = ""
+			do {
+				try await llamaState.complete(text: multiLineText)
+				multiLineText = ""
+			} catch {
+				print("sendText error:", error)
+			}
 		}
 	}
 	
-	func bench() {
+	private func bench() {
 		Task {
-			await llamaState.bench()
+			do {
+				try await llamaState.bench()
+			} catch {
+				print("bench error:", error)
+			}
 		}
 	}
 	
-	func clear() {
+	private func clear() {
 		Task {
 			await llamaState.clear()
+		}
+	}
+
+	// MARK: Private
+
+	private func cleanupModelCaches() {
+		// Delete all models (*.gguf)
+		let fileManager = FileManager.default
+		let documentsUrl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+		do {
+			let fileURLs = try fileManager.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
+			for fileURL in fileURLs {
+				if fileURL.pathExtension == "gguf" {
+					try fileManager.removeItem(at: fileURL)
+				}
+			}
+		} catch {
+			print("Error while enumerating files \(documentsUrl.path): \(error.localizedDescription)")
 		}
 	}
 }

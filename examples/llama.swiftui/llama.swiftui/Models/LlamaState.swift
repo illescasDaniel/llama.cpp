@@ -36,20 +36,20 @@ class LlamaState {
 		}
 	}
 	
-	func complete(text: String) async {
+	func complete(text: String) async throws {
 		guard let llamaContext else {
 			return
 		}
 		
 		let t_start = DispatchTime.now().uptimeNanoseconds
-		await llamaContext.completion_init(text: text)
+		try await llamaContext.completion_init(text: text)
 		let t_heat_end = DispatchTime.now().uptimeNanoseconds
 		let t_heat = Double(t_heat_end - t_start) / NS_PER_S
 		
 		messageLog += "\(text)"
 		
 		while await llamaContext.n_cur < llamaContext.n_len {
-			let result = await llamaContext.completion_loop()
+			let result = try await llamaContext.completion_loop()
 			messageLog += "\(result)"
 		}
 		
@@ -66,7 +66,7 @@ class LlamaState {
 			"""
 	}
 	
-	func bench() async {
+	func bench() async throws {
 		guard let llamaContext else {
 			return
 		}
@@ -77,7 +77,7 @@ class LlamaState {
 		messageLog += await llamaContext.model_info() + "\n"
 		
 		let t_start = DispatchTime.now().uptimeNanoseconds
-		let _ = await llamaContext.bench(pp: 8, tg: 4, pl: 1) // heat up
+		let _ = try await llamaContext.bench(pp: 8, tg: 4, pl: 1) // heat up
 		let t_end = DispatchTime.now().uptimeNanoseconds
 		
 		let t_heat = Double(t_end - t_start) / NS_PER_S
@@ -89,8 +89,8 @@ class LlamaState {
 			return
 		}
 		
-		let result = await llamaContext.bench(pp: 512, tg: 128, pl: 1, nr: 3)
-		
+		let result = try await llamaContext.bench(pp: 512, tg: 128, pl: 1, nr: 3)
+
 		messageLog += "\(result)"
 		messageLog += "\n"
 	}
