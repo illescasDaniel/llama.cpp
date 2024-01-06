@@ -139,7 +139,7 @@ actor LlamaContext {
 			new_token_id = llama_sample_token_greedy(context, &candidates_p)
 		}
 
-		if new_token_id == llama_token_eos(context) || n_cur == n_len {
+		if new_token_id == llama_token_eos(model) || n_cur == n_len {
 			let new_token_str = String(cString: temporary_invalid_cchars + [0])
 			temporary_invalid_cchars.removeAll()
 			return new_token_str
