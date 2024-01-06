@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		549479CB2AC9E16000E0F78B /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 549479CA2AC9E16000E0F78B /* Metal.framework */; };
-		6527D12B2B481BCF00304401 /* llama in Frameworks */ = {isa = PBXBuildFile; productRef = 6527D12A2B481BCF00304401 /* llama */; };
+		650FA5A42B497263005E8413 /* llama in Frameworks */ = {isa = PBXBuildFile; productRef = 650FA5A32B497263005E8413 /* llama */; };
 		7FA3D2B32B2EA2F600543F92 /* DownloadButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA3D2B22B2EA2F600543F92 /* DownloadButton.swift */; };
 		8A1C83772AC328BD0096AF73 /* llama_swiftuiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1C83762AC328BD0096AF73 /* llama_swiftuiApp.swift */; };
 		8A1C83792AC328BD0096AF73 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1C83782AC328BD0096AF73 /* ContentView.swift */; };
@@ -59,7 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6527D12B2B481BCF00304401 /* llama in Frameworks */,
+				650FA5A42B497263005E8413 /* llama in Frameworks */,
 				549479CB2AC9E16000E0F78B /* Metal.framework in Frameworks */,
 				8A39BE0A2AC7601100BFEB40 /* Accelerate.framework in Frameworks */,
 			);
@@ -178,7 +178,7 @@
 			);
 			name = llama.swiftui;
 			packageProductDependencies = (
-				6527D12A2B481BCF00304401 /* llama */,
+				650FA5A32B497263005E8413 /* llama */,
 			);
 			productName = llama.swiftui;
 			productReference = 8A1C83732AC328BD0096AF73 /* llama.swiftui.app */;
@@ -210,7 +210,7 @@
 			);
 			mainGroup = 8A1C836A2AC328BD0096AF73;
 			packageReferences = (
-				6527D1292B481BCF00304401 /* XCRemoteSwiftPackageReference "llama" */,
+				650FA5A22B497263005E8413 /* XCRemoteSwiftPackageReference "llama" */,
 			);
 			productRefGroup = 8A1C83742AC328BD0096AF73 /* Products */;
 			projectDirPath = "";
@@ -477,20 +477,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6527D1292B481BCF00304401 /* XCRemoteSwiftPackageReference "llama" */ = {
+		650FA5A22B497263005E8413 /* XCRemoteSwiftPackageReference "llama" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/illescasDaniel/llama.cpp";
 			requirement = {
 				kind = revision;
-				revision = f822cf116360a25963a6d172c524f83ec5e17cf9;
+				revision = 0dfb310aa0e5661721a3f7e3efbbc3c5d26721c6;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		6527D12A2B481BCF00304401 /* llama */ = {
+		650FA5A32B497263005E8413 /* llama */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 6527D1292B481BCF00304401 /* XCRemoteSwiftPackageReference "llama" */;
+			package = 650FA5A22B497263005E8413 /* XCRemoteSwiftPackageReference "llama" */;
 			productName = llama;
 		};
 /* End XCSwiftPackageProductDependency section */
