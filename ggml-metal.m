@@ -252,13 +252,16 @@ struct ggml_metal_context * ggml_metal_init(int n_cb) {
     // load library
     {
         NSBundle * bundle = nil;
+		NSString * resourceName = nil;
 #ifdef SWIFT_PACKAGE
         bundle = SWIFTPM_MODULE_BUNDLE;
+		resourceName = @"default";
 #else
         bundle = [NSBundle bundleForClass:[GGMLMetalClass class]];
+		resourceName = @"ggml";
 #endif
         NSError * error = nil;
-        NSString * libPath = [bundle pathForResource:@"ggml" ofType:@"metallib"];
+        NSString * libPath = [bundle pathForResource:resourceName ofType:@"metallib"];
         if (libPath != nil) {
             // pre-compiled library found
             NSURL * libURL = [NSURL fileURLWithPath:libPath];
@@ -276,9 +279,6 @@ struct ggml_metal_context * ggml_metal_init(int n_cb) {
                 sourcePath = [ggmlMetalPathResources stringByAppendingPathComponent:@"ggml-metal.metal"];
             } else {
                 sourcePath = [bundle pathForResource:@"ggml-metal" ofType:@"metal"];
-                if (sourcePath == nil) {
-                    sourcePath = [bundle pathForResource:@"default" ofType:@"metallib"];
-                }
             }
             if (sourcePath == nil) {
                 GGML_METAL_LOG_WARN("%s: error: could not use bundle path to find ggml-metal.metal, falling back to trying cwd\n", __func__);

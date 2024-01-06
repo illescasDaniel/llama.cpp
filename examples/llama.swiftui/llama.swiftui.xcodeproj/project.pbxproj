@@ -39,7 +39,7 @@
 
 /* Begin PBXFileReference section */
 		549479CA2AC9E16000E0F78B /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
-		6527D1322B485A1A00304401 /* build.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = build.xcconfig; sourceTree = "<group>"; };
+		650FA5E92B49AD45005E8413 /* build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = build.xcconfig; sourceTree = "<group>"; };
 		6527D1332B485A1A00304401 /* build.xcconfig.sample */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = build.xcconfig.sample; sourceTree = "<group>"; };
 		7FA3D2B22B2EA2F600543F92 /* DownloadButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloadButton.swift; sourceTree = "<group>"; };
 		8A1C83732AC328BD0096AF73 /* llama.swiftui.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = llama.swiftui.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,7 +71,7 @@
 		8A1C836A2AC328BD0096AF73 = {
 			isa = PBXGroup;
 			children = (
-				6527D1322B485A1A00304401 /* build.xcconfig */,
+				650FA5E92B49AD45005E8413 /* build.xcconfig */,
 				6527D1332B485A1A00304401 /* build.xcconfig.sample */,
 				8A907F312AC7134E006146EA /* llama.cpp.swift */,
 				8A3F84232AC4C891005E2EE8 /* models */,
@@ -253,7 +253,6 @@
 /* Begin XCBuildConfiguration section */
 		8A1C837F2AC328BE0096AF73 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6527D1322B485A1A00304401 /* build.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -321,7 +320,6 @@
 		};
 		8A1C83802AC328BE0096AF73 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6527D1322B485A1A00304401 /* build.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -382,7 +380,6 @@
 		};
 		8A1C83822AC328BE0096AF73 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6527D1322B485A1A00304401 /* build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -419,7 +416,6 @@
 		};
 		8A1C83832AC328BE0096AF73 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6527D1322B485A1A00304401 /* build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -482,7 +478,7 @@
 			repositoryURL = "https://github.com/illescasDaniel/llama.cpp";
 			requirement = {
 				kind = revision;
-				revision = 0dfb310aa0e5661721a3f7e3efbbc3c5d26721c6;
+				revision = 03ade2632c7e7807d5e86d9de9beabf6a474b755;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
