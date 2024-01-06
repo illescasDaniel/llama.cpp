@@ -13,17 +13,23 @@ let package = Package(
     products: [
         .library(name: "llama", targets: ["llama"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/illescasDaniel/ggml", .revision("9e822a6b3c093a2cd3d98e4bcb1f2b734e0eb1fe"))
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "llama",
-            dependencies: ["ggml"],
+            dependencies: [],
             path: ".",
             exclude: [],
             sources: [
                 "llama.cpp",
+                "ggml.c",
+                "ggml-alloc.c",
+                "ggml-backend.c",
+                "ggml-quants.c",
+                "ggml-metal.m",
+            ],
+            resources: [
+                .process("ggml-metal.metal")
             ],
             publicHeadersPath: "spm-headers",
             cSettings: [
