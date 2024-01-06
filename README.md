@@ -1,5 +1,8 @@
 # llama.cpp
 
+> [!WARNING]
+> If you want to use this as a Swift Package, use a specific commit hash instead of a tag (this is due to unsafe flags being present; you can't choose a specific tag version with unsafe flags)
+
 ![llama](https://user-images.githubusercontent.com/1991296/230134379-7181e485-c521-4d23-a0d6-f7b3b61ba524.png)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
